@@ -15,6 +15,7 @@ export interface Subject {
   name: string;
   name_cn: string;
   id: number;
+  total_episodes: number;
 }
 
 export interface Episode {

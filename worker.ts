@@ -2,34 +2,33 @@ import { buildICS } from './lib'
 
 import defaultHTMLPage from './index.html'
 
-const cache = caches.default
-
 const usernameKey = 'username'
 
 async function handleRequest (username: string): Promise<Response> {
+  const init = {
+    status: 200,
+    headers: {
+      'cache-control': 'public, max-age=86400',
+      'content-type': 'text/plain;charset=UTF-8',
+    },
+  }
+
   try {
     console.log(`try to fetch calendar for ${username}`)
-    const cacheKey = `https://bangumi-calendar.trim21.workers.dev/${username}.txt`
-    const cachedRes = await cache.match(cacheKey)
-    if (cachedRes) {
-      console.log('request.ts cached')
-      return cachedRes
+    const cacheKey = `calendar-v4-${username}`
+    const cachedCalendar = await BANGUMI_CALENDAR.get(cacheKey, { cacheTtl: 86400 })
+    if (cachedCalendar) {
+      console.log('calendar cached')
+      return new Response(cachedCalendar, init)
     }
 
-    console.log('request.ts not cached')
-    const res = new Response(await buildICS(username), {
-        status: 200,
-        headers: {
-          'cache-control': 'public, max-age=86400',
-          'content-type': 'text/plain;charset=UTF-8',
-        },
-      }
-    )
-    const putResult = await cache.put(cacheKey, res.clone())
-    console.log(putResult)
-    return res
+    console.log('calendar not cached')
+    const calendar = await buildICS(username)
+
+    await BANGUMI_CALENDAR.put(cacheKey, calendar, { expirationTtl: 86400 })
+    return new Response(calendar, init)
   } catch (e: any) {
-    return new Response(e.toString(), { status: 500 })
+    return new Response(e.stack.toString(), { status: 500 })
   }
 }
 
