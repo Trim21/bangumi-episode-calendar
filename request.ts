@@ -44,6 +44,10 @@ export async function fetchAllUserCollection (username: string, pageSize: number
     }))
     res = await r.json()
 
+    if (!res || !res.data) {
+      throw new Error('failed to fetch user collection')
+    }
+
     data.push(...res.data)
 
     offset += pageSize
@@ -52,7 +56,7 @@ export async function fetchAllUserCollection (username: string, pageSize: number
   return data
 }
 
-export async function getSubjectInfo (subjectID: number): Promise<Subject> {
+export async function getSubjectInfo (subjectID: number): Promise<Subject | null> {
   const key = `subject-${subjectID}`
   let value = await BANGUMI_CALENDAR.get(key, KVReadOption)
   if (value) {
@@ -60,6 +64,10 @@ export async function getSubjectInfo (subjectID: number): Promise<Subject> {
   }
 
   const res = await fetchWithCache(`https://api.bgm.tv/v0/subjects/${subjectID}`)
+
+  if (res.status >= 400) {
+    return null
+  }
 
   await BANGUMI_CALENDAR.put(key, await res.clone().text(), { expirationTtl: 86400 })
 
@@ -95,6 +103,10 @@ export async function _fetchAllEpisode (
       limit: pageSize,
     }))
     res = await r.json()
+
+    if (!res || !res.data) {
+      throw new Error(`failed to fetch episodes for subject ${subjectID}`)
+    }
 
     data.push(...res.data)
 

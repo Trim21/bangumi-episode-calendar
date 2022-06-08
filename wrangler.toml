@@ -3,5 +3,5 @@ main = "./worker.ts"
 compatibility_date = "2022-06-08"
 
 kv_namespaces = [
-    { binding = "BANGUMI_CALENDAR", id = "0773e0d0ce874a3eae9444e66a2364e7" }
+    { binding = "BANGUMI_CALENDAR", id = "0773e0d0ce874a3eae9444e66a2364e7", preview_id = "45651bc08dbd459dbfac99007a9c3cdc" }
 ]

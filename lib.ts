@@ -9,6 +9,10 @@ import {
 const SubjectTypeAnime = 2
 const SubjectTypeEpisode = 6
 
+function isNull<T> (s: T | null): s is T {
+  return s !== null
+}
+
 export async function buildICS (username: string): Promise<string> {
   console.log('fetching episodes')
   const collections = (await fetchAllUserCollection(username)).filter(
@@ -19,13 +23,18 @@ export async function buildICS (username: string): Promise<string> {
 
   const limit = pLimit(10)
 
-  const subjects: Subject[] = await Promise.all(
-    collections.map((s) => limit(() => getSubjectInfo(s.subject_id))
-    )
-  )
+  const subjectWithNull: Subject[] = (await Promise.all(
+    collections.map((s) => limit(() => getSubjectInfo(s.subject_id)))
+  )).filter(isNull)
+
+  const subjects: Record<number, Subject> = subjectWithNull.reduce((previousValue: Record<number, Subject>, currentValue: Subject) => {
+    previousValue[currentValue.id] = currentValue
+
+    return previousValue
+  }, {} as Record<number, Subject>)
 
   const result: Episode[][] = await Promise.all(
-    collections.map((s) => limit(() => fetchAllEpisode(s.subject_id)))
+    collections.filter(x => subjects.hasOwnProperty(x.subject_id)).map((s) => limit(() => fetchAllEpisode(s.subject_id)))
   )
 
   const episodes = result.reduce((previousValue, currentValue) => {
@@ -33,14 +42,7 @@ export async function buildICS (username: string): Promise<string> {
     return previousValue
   })
 
-  return renderICS(
-    episodes,
-    subjects.reduce((previousValue, currentValue) => {
-      previousValue[currentValue.id] = currentValue
-
-      return previousValue
-    }, {} as Record<number, Subject>)
-  )
+  return renderICS(episodes, subjects)
 }
 
 function renderICS (
@@ -74,7 +76,7 @@ function renderICS (
 
     calendar.createEvent({
       start: [date[0], date[1], date[2]],
-      end: [date[0], date[1], date[2]],
+      end: [date[0], date[1], date[2] + 1],
       summary: `${subjects[episode.subject_id].name_cn} ${episode.sort}`,
     })
   }
@@ -89,7 +91,7 @@ interface Event {
 }
 
 class ICalendar {
-  private name: string
+  private readonly name: string
   private readonly data: Event[]
 
   constructor (config: { name: string }) {
@@ -117,8 +119,8 @@ class ICalendar {
         'BEGIN:VEVENT',
         `UID:${generateUID()}`,
         `DTSTAMP:${formatDateObject(now)}`,
-        `DTSTART:${formatDate(event.start)}T160000Z`,
-        `DTEND:${formatDate(event.end)}T160000Z`,
+        `DTSTART;VALUE=DATE:${formatDate(event.start)}`,
+        `DTEND;VALUE=DATE:${formatDate(event.end)}`,
         `SUMMARY:${event.summary}`,
         `END:VEVENT`,
       )
