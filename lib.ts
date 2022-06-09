@@ -31,7 +31,6 @@ function renderICS (subjects: SlimSubject[]): string {
 
       const event: Event = {
         start: date,
-        end: [date[0], date[1], date[2] + 1],
         summary: `${subject.name_cn || subject.name} ${episode.sort}`,
         description: episode.name || undefined
       }
@@ -49,7 +48,6 @@ function renderICS (subjects: SlimSubject[]): string {
 
 interface Event {
   start: readonly [number, number, number],
-  end: readonly [number, number, number],
   summary: string
   description?: string,
 }
@@ -66,9 +64,7 @@ class ICalendar {
     this.lines = [
       `BEGIN:VCALENDAR`,
       'VERSION:2.0',
-      'PRODID:-//trim21//bangumi-icalendar//CN',
-      `NAME:${this.name}`,
-      `X-WR-CALNAME:${this.name}`,
+      'PRODID:-//trim21//bangumi-icalendar//EN',
     ]
   }
 
@@ -77,8 +73,7 @@ class ICalendar {
       'BEGIN:VEVENT',
       `UID:${generateUID()}`,
       `DTSTAMP:${formatDateObject(this.now)}`,
-      `DTSTART;VALUE=DATE:${formatDate(event.start)}`,
-      `DTEND;VALUE=DATE:${formatDate(event.end)}`,
+      `DTSTART:${formatDate(event.start)}`,
       `SUMMARY:${event.summary}`,
     )
     if (event.description) {
@@ -89,7 +84,7 @@ class ICalendar {
   }
 
   toString (): string {
-    return this.lines.join('\n') + 'END:VCALENDAR'
+    return this.lines.join('\r\n') + '\r\nEND:VCALENDAR'
   }
 }
 

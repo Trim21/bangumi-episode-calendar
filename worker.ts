@@ -15,7 +15,7 @@ async function handleRequest (username: string): Promise<Response> {
 
   try {
     console.log(`try to fetch calendar for ${username}`)
-    const cacheKey = `calendar-v6-${username}`
+    const cacheKey = `calendar-v9-${username}`
     const cachedCalendar = await BANGUMI_CALENDAR.get(cacheKey, { cacheTtl: 86400 })
     if (cachedCalendar) {
       console.log('calendar cached')
@@ -46,5 +46,6 @@ addEventListener('fetch', (event: FetchEvent) => {
       }
     ))
   }
+
   return event.respondWith(handleRequest(username))
 })
