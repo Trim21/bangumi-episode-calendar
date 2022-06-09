@@ -1,23 +1,10 @@
 import pLimit from 'p-limit'
-import { Subject } from './bangumi'
-import {
-  fetchAllEpisode,
-  fetchAllUserCollection,
-  getSubjectInfo,
-  ParsedEpisode, SlimSubject
-} from './request'
+import { fetchAllUserCollection, getSubjectInfo, SlimSubject } from './request'
 import { isNotNull } from './util'
-
-const SubjectTypeAnime = 2
-const SubjectTypeEpisode = 6
 
 export async function buildICS (username: string): Promise<string> {
   console.log('fetching episodes')
-  let collections = (await fetchAllUserCollection(username)).filter(
-    (value) =>
-      value.subject_type == SubjectTypeAnime ||
-      value.subject_id == SubjectTypeEpisode
-  )
+  let collections = await fetchAllUserCollection(username)
 
   const limit = pLimit(10)
 

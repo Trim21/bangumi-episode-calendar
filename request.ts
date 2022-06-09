@@ -2,6 +2,8 @@ import * as pkg from './package.json'
 import { Collection, Episode, Paged, Subject } from './bangumi'
 import { isNotNull } from './util'
 
+const SubjectTypeAnime = 2
+const SubjectTypeEpisode = 6
 const KVReadOption = { cacheTtl: 86400 } as const
 
 export async function fetchWithUA (request: Request | string, init?: RequestInit | Request): Promise<Response> {
@@ -12,9 +14,9 @@ export async function fetchWithUA (request: Request | string, init?: RequestInit
 
 export async function fetchAllUserCollection (username: string, pageSize: number = 50): Promise<Array<Collection>> {
   const data: Array<Collection> = []
+
   let offset: number = 0
   let res: Paged<Collection>
-
   do {
     const r = await fetchWithUA(`https://api.bgm.tv/v0/users/${username}/collections` + '?' + qs({
       type: '3', offset: offset.toString(), limit: pageSize.toString(),
@@ -25,10 +27,12 @@ export async function fetchAllUserCollection (username: string, pageSize: number
       throw new Error('failed to fetch user collection')
     }
 
-    data.push(...res.data)
+    data.push(...res.data.filter(c => c.subject_type === SubjectTypeAnime || c.subject_type === SubjectTypeEpisode))
 
     offset += pageSize
   } while (offset < res.total)
+
+  console.log(data)
 
   return data
 }
