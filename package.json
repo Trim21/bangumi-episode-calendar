@@ -5,6 +5,8 @@
   "license": "MIT",
   "main": "./dist/main.js",
   "scripts": {
+    "format": "prettier -w ./",
+    "upload": "wrangler publish",
     "build": "wrangler publish --dry-run --outdir=dist"
   },
   "devDependencies": {
