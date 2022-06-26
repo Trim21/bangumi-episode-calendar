@@ -19,7 +19,7 @@ async function handleRequest(
 
   // try {
   console.log(`try to fetch calendar for ${username}`);
-  const cacheKey = `calendar-v10-${username}`;
+  const cacheKey = `calendar-v11-${username}`;
   const cachedCalendar = await kv.get(cacheKey, { cacheTtl: 86400 });
   if (cachedCalendar) {
     console.log("calendar cached");
