@@ -24,36 +24,36 @@ export async function fetchAllUserCollection(
 ): Promise<Array<Collection>> {
   const data: Array<Collection> = [];
 
-  let offset: number = 0;
-  let res: Paged<Collection>;
-  do {
-    const r = await fetchWithUA(
-      `https://api.bgm.tv/v0/users/${username}/collections` +
-        "?" +
-        qs({
-          type: "3",
-          offset: offset.toString(),
-          limit: pageSize.toString(),
-        })
-    );
-    res = await r.json();
+  for (const collectionType of [1, 3]) {
+    let res: Paged<Collection>;
+    let offset: number = 0;
+    do {
+      const r = await fetchWithUA(
+        `https://api.bgm.tv/v0/users/${username}/collections` +
+          "?" +
+          qs({
+            offset,
+            type: collectionType,
+            limit: pageSize,
+          })
+      );
+      res = await r.json();
 
-    if (!res || !res.data) {
-      throw new Error("failed to fetch user collection");
-    }
+      if (!res || !res.data) {
+        throw new Error("failed to fetch user collection");
+      }
 
-    data.push(
-      ...res.data.filter(
-        (c) =>
-          c.subject_type === SubjectTypeAnime ||
-          c.subject_type === SubjectTypeEpisode
-      )
-    );
+      data.push(
+        ...res.data.filter(
+          (c) =>
+            c.subject_type === SubjectTypeAnime ||
+            c.subject_type === SubjectTypeEpisode
+        )
+      );
 
-    offset += pageSize;
-  } while (offset < res.total);
-
-  console.log(data);
+      offset += pageSize;
+    } while (offset < res.total);
+  }
 
   return data;
 }
